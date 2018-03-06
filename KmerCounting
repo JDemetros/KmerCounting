@@ -1,0 +1,113 @@
+// File: a1.cpp
+// John
+// Demetros
+// I AFFIRM THAT WHEN WORKING ON THIS ASSIGNMENT
+// I WILL FOLLOW UB STUDENT CODE OF CONDUCT, AND
+// I WILL NOT VIOLATE ACADEMIC INTEGRITY RULES
+
+#include<iostream>
+#include<fstream>
+#include<vector>
+#include<cstring>
+
+void get_sequence(const char* argv,std::string& sequence){
+
+  // std::ifstream iFile;
+  // iFile.open(argv);
+  // std::getline(iFile,sequence);
+  // iFile.close();
+  std::ifstream inpt(argv,std::ios::in|std::ios::binary);
+  inpt.seekg(0, std::ios::end);
+  sequence.resize(-1+inpt.tellg());
+  inpt.seekg(0,std::ios::beg);
+
+  inpt.read(&sequence[0],sequence.size());
+  //sequence.resize(sequence.size()-1);
+
+  //sequence.pop_back();
+
+   //for(unsigned int i=0;i<sequence.size();++i) std::cout<<sequence[i];
+  //std::cout << sequence.size() << std::endl;
+
+  inpt.close();
+
+}
+void everything(const std::string& sequence,const unsigned int k){
+
+    uint32_t strgsize=(2<<(k<<1))-1;
+    unsigned int* storage = new unsigned int[strgsize];
+
+    for(auto i=storage;i!=(storage+(strgsize));++i) *i=0;
+
+    // A=1, C=3, G=7, N=6, T=4
+
+    unsigned int count[8]={0,0,0,0,0,0,0,0};
+  // might need to add zeros to these binary numbers
+  const uint32_t bitmaskSeq = 0b11;
+  const uint32_t bitmaskIndL = 0b111;
+  const uint32_t rmvBits = 0b00111111111111111111>>(20-(k<<1));
+  std::vector<uint32_t>indexes;
+  uint32_t temp=0;
+  unsigned int counter=0;
+
+  for(auto i=sequence.begin();i!=sequence.end();++i){
+    // below line is awesome
+    ++count[(*i>>1)&bitmaskIndL];
+
+    if(*i=='N') {
+      counter=0;
+      temp=0;
+      continue;
+    }
+    // this is definitely correct, if you fuck with it you better think it through first buddyboy
+    temp|=(((*i)>>1)&bitmaskSeq);
+
+    ++counter;
+
+    if(counter>=k){
+
+      if(storage[temp]==0) indexes.push_back(temp);
+
+      ++storage[temp];
+      // removes the 2 bits 2*k to the left
+      temp&=rmvBits;
+    }
+    temp<<=2;
+  }
+
+  const unsigned char letters[4] = {'A','C','T','G'};
+  const unsigned int charSize = sequence.size();
+  std::cout<<0<<" "<< k <<" "<<charSize<<"\n";
+  std::cout<<1<<" "<<count[0]<<" "<<count[1]<<" "<<
+  count[3]<<" "<<count[2]<<" "<<count[7]<<"\n";
+  if(charSize<k){
+    std::cout<<"error"<<std::endl;
+    delete[] storage;
+    return;
+  }
+
+  for(auto i=indexes.begin();i!=indexes.end();++i){
+    for(int p=(k<<1)-2;p>=0;p-=2){
+      // shifts 2 digits at 2*k and 2*k-1 to the right most 2 bits, gets those bits
+      // then shifts next 2 digits to the rightmost 2 bits, gets those bits, etc...
+      // ex 101100, print(10), print(11), print(00)
+      std::cout<<letters[(*i>>p)&bitmaskSeq];
+    }
+    std::cout<<" "<<storage[*i]<<"\n";
+  }
+ // //std::cout<<charSize<<std::endl;
+  std::cout<<std::flush;
+  delete[] storage;
+}
+
+int main(int argc, char* argv[]){
+
+  std::string sequence ="";
+  const unsigned int k = std::atoi(argv[2]);
+
+  get_sequence(argv[1],sequence);
+
+  everything(sequence,k);
+
+  return 0;
+}
